@@ -1,22 +1,30 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Firebase Realtime Database Example</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aquarium Monitoring</title>
     <style>
         body {
             font-family: Arial, sans-serif;
             margin: 20px;
-            background: url('https://via.placeholder.com/1920x1080') no-repeat center center fixed;
+            background: url('https://images.unsplash.com/photo-1544551763-8942f33cfe36?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=MnwzNjUyOXwwfDF8c2VhcmNofDJ8fHdhdGVyfGVufDB8fHx8MTY3MjgzODg3OQ&ixlib=rb-1.2.1&q=80&w=1080') no-repeat center center fixed;
             background-size: cover;
             color: #fff;
         }
-        #data {
-            margin-top: 20px;
-            padding: 10px;
-            background: rgba(0, 0, 0, 0.6);
-            border-radius: 5px;
+        .data-section {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        .data-box {
+            background-color: rgba(255, 255, 255, 0.8);
+            color: #333;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            min-width: 150px;
+            flex: 1;
         }
         h1 {
             text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
@@ -26,26 +34,46 @@
             border: none;
             color: #fff;
             padding: 10px 20px;
-            text-align: center;
-            text-decoration: none;
-            display: inline-block;
             font-size: 16px;
-            margin: 10px 0;
             cursor: pointer;
             border-radius: 5px;
+            margin-top: 20px;
         }
         button:hover {
             background: #0056b3;
         }
+        .data-box h2 {
+            margin-bottom: 10px;
+        }
     </style>
-    <!-- Firebase App (the core Firebase SDK) -->
-    <script type="module" src="./config.js"></script>
-    <script type="module" src="./firebase-config.js"></script>
-    <script type="module" src="./app.js"></script>
 </head>
 <body>
-    <h1>Firebase Realtime Database Example</h1>
-    <div id="data">Loading data...</div>
-    <button id="addData">Add Random Data</button>
+    <h1>Aquarium Monitoring</h1>
+    <div class="data-section">
+        <div class="data-box">
+            <h2>Temperature: <span id="temperature">Loading...</span> °C</h2>
+        </div>
+        <div class="data-box">
+            <h2>pH: <span id="ph">Loading...</span></h2>
+        </div>
+        <div class="data-box">
+            <h2>TDS: <span id="tds">Loading...</span> ppm</h2>
+        </div>
+        <div class="data-box">
+            <h2>Sunrise: <span id="sunrise">Loading...</span></h2>
+        </div>
+        <div class="data-box">
+            <h2>Sunset: <span id="sunset">Loading...</span></h2>
+        </div>
+        <div class="data-box">
+            <h2>Feeding Times: <span id="feedingTimes">Loading...</span></h2>
+        </div>
+    </div>
+    <button id="updateData">Update Data</button>
+
+    <!-- Import skryptów z atrybutem 'defer' -->
+    <script type="module" src="./config.js" defer></script>
+    <script type="module" src="./firebase-config.js" defer></script>
+    <script type="module" src="./app.js" defer></script>
 </body>
 </html>
