@@ -1,3 +1,5 @@
+
+.gitignore*
 # Logs
 logs
 *.log
@@ -10,13 +12,13 @@ package-lock.json*
 package.json*
 
 firebase.json*
-firebaserc*
+.firebaserc*
 
 # Firebase cache
 .firebase/
 
 # Firebase config
-firebase.js
+firebase.js*
 
 # Uncomment this if you'd like others to create their own Firebase project.
 # For a team working on the same Firebase project(s), it is recommended to leave
