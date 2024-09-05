@@ -39,53 +39,13 @@
         }
     </style>
     <!-- Firebase App (the core Firebase SDK) -->
-    <script defer src="/__/firebase/10.13.1/firebase-app-compat.js"></script>
-    <!-- Firebase Realtime Database -->
-    <script defer src="/__/firebase/10.13.1/firebase-database-compat.js"></script>
-    <script defer src="/__/firebase/init.js"></script>
+    <script type="module" src="./config.js"></script>
+    <script type="module" src="./firebase-config.js"></script>
+    <script type="module" src="./app.js"></script>
 </head>
 <body>
     <h1>Firebase Realtime Database Example</h1>
     <div id="data">Loading data...</div>
     <button id="addData">Add Random Data</button>
-
-    <script type="module">
-        import db from './firebase.js'; // Import the Firebase configuration
-
-        document.addEventListener('DOMContentLoaded', function() {
-            // Reference to the data location
-            const dataRef = db.ref('/exampleData');
-
-            // Function to add random data
-            function addRandomData() {
-                const randomData = {
-                    name: "John Doe",
-                    age: Math.floor(Math.random() * 100),
-                    email: "john.doe@example.com"
-                };
-
-                dataRef.set(randomData).then(() => {
-                    console.log('Data added successfully');
-                }).catch((error) => {
-                    console.error('Error adding data:', error);
-                });
-            }
-
-            // Event listener for the button
-            document.getElementById('addData').addEventListener('click', addRandomData);
-
-            // Fetch and display data
-            dataRef.on('value', (snapshot) => {
-                const data = snapshot.val();
-                if (data) {
-                    document.getElementById('data').textContent = JSON.stringify(data, null, 2);
-                } else {
-                    document.getElementById('data').textContent = 'No data available';
-                }
-            }, (error) => {
-                document.getElementById('data').textContent = 'Error fetching data: ' + error.message;
-            });
-        });
-    </script>
 </body>
 </html>
