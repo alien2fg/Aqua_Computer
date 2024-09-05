@@ -5,8 +5,38 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Firebase Realtime Database Example</title>
     <style>
-        body { font-family: Arial, sans-serif; margin: 20px; }
-        #data { margin-top: 20px; }
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: url('https://via.placeholder.com/1920x1080') no-repeat center center fixed;
+            background-size: cover;
+            color: #fff;
+        }
+        #data {
+            margin-top: 20px;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.6);
+            border-radius: 5px;
+        }
+        h1 {
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+        }
+        button {
+            background: #007BFF;
+            border: none;
+            color: #fff;
+            padding: 10px 20px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 10px 0;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
     </style>
     <!-- Firebase App (the core Firebase SDK) -->
     <script defer src="/__/firebase/10.13.1/firebase-app-compat.js"></script>
