@@ -28,18 +28,72 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('data').textContent = 'Error fetching data: ' + error.message;
     });
 
-    // Event listener for the button to simulate data update
-    const updateButton = document.getElementById('updateData');
+    // Function to update feeding time options based on selected number
+    function updateFeedingTimesOptions(count) {
+        const container = document.getElementById('feedingTimesContainer');
+        if (!container) return; // Ensure container exists
+
+        container.innerHTML = '<label for="feedingTimesInput">Feeding Times:</label>';
+        for (let i = 0; i < count; i++) {
+            const input = document.createElement('input');
+            input.type = 'time';
+            input.id = `feedingTime${i + 1}`;
+            input.required = true;
+            input.placeholder = `Feeding Time ${i + 1}`;
+            container.appendChild(input);
+            container.appendChild(document.createElement('br'));
+        }
+    }
+
+    // Ensure feedingCount element exists before adding event listener
+    const feedingCountElement = document.getElementById('feedingCount');
+    if (feedingCountElement) {
+        feedingCountElement.addEventListener('change', (event) => {
+            const count = parseInt(event.target.value, 10);
+            updateFeedingTimesOptions(count);
+        });
+    } else {
+        console.error('Element with ID "feedingCount" not found.');
+    }
+
+    // Event listener for the form to simulate data update
+    const dataForm = document.getElementById('dataForm');
     
-    if (updateButton) {
-        updateButton.addEventListener('click', () => {
+    if (dataForm) {
+        dataForm.addEventListener('submit', (event) => {
+            event.preventDefault();
+
+            const temperatureInput = document.getElementById('temperatureInput');
+            const sunriseInput = document.getElementById('sunriseInput');
+            const sunsetInput = document.getElementById('sunsetInput');
+            const feedingCountElement = document.getElementById('feedingCount');
+
+            if (!temperatureInput || !sunriseInput || !sunsetInput || !feedingCountElement) {
+                console.error('One or more form elements are missing.');
+                return;
+            }
+
+            const temperature = temperatureInput.value;
+            const sunrise = sunriseInput.value;
+            const sunset = sunsetInput.value;
+            const feedingCount = parseInt(feedingCountElement.value, 10);
+            const feedingTimes = [];
+            
+            for (let i = 0; i < feedingCount; i++) {
+                const feedingTimeInput = document.getElementById(`feedingTime${i + 1}`);
+                if (feedingTimeInput) {
+                    const feedingTime = feedingTimeInput.value;
+                    feedingTimes.push(feedingTime);
+                }
+            }
+
             const data = {
-                temperature: (Math.random() * 10 + 20).toFixed(1), // Random temperature between 20°C and 30°C
-                ph: (Math.random() * 2 + 6).toFixed(1), // Random pH between 6 and 8
-                tds: Math.floor(Math.random() * 1000 + 200), // Random TDS between 200 and 1200 ppm
-                sunrise: '06:00 AM', // Example value
-                sunset: '08:00 PM', // Example value
-                feedingTimes: ['08:00 AM', '07:00 PM'] // Example feeding times
+                temperature: parseFloat(temperature).toFixed(1),
+                ph: document.getElementById('ph').textContent, // pH is read-only
+                sunrise: sunrise,
+                sunset: sunset,
+                feedingTimes: feedingTimes,
+                tds: Math.floor(Math.random() * 1000 + 200) // This can be updated as needed
             };
 
             // Update Firebase with new data
@@ -49,5 +103,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 console.error('Error updating data:', error);
             });
         });
+    } else {
+        console.error('Form element with ID "dataForm" not found.');
     }
+
+    // Initialize feeding times options based on default value
+    updateFeedingTimesOptions(1); // Default to 1 feeding time
 });

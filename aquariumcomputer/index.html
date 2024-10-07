@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Aquarium Monitoring</title>
     <style>
+        /* Twój styl pozostaje bez zmian */
         body {
             font-family: Arial, sans-serif;
             margin: 20px;
@@ -45,6 +46,20 @@
         .data-box h2 {
             margin-bottom: 10px;
         }
+        .form-section {
+            margin-top: 30px;
+        }
+        .form-section input, .form-section select {
+            padding: 10px;
+            margin: 5px 0;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            width: calc(100% - 22px); /* Adjust for padding */
+        }
+        .form-section label {
+            display: block;
+            margin-top: 10px;
+        }
     </style>
 </head>
 <body>
@@ -69,7 +84,37 @@
             <h2>Feeding Times: <span id="feedingTimes">Loading...</span></h2>
         </div>
     </div>
-    <button id="updateData">Update Data</button>
+
+    <div class="form-section">
+        <h2>Update Data</h2>
+        <form id="dataForm">
+            <label for="temperatureInput">Temperature (°C):</label>
+            <input type="number" id="temperatureInput" step="0.1" min="0" required>
+            <small>Set the current temperature of the aquarium.</small>
+
+            <label for="sunriseInput">Sunrise Time:</label>
+            <input type="time" id="sunriseInput" required>
+            <small>Specify the sunrise time for the aquarium lighting schedule.</small>
+
+            <label for="sunsetInput">Sunset Time:</label>
+            <input type="time" id="sunsetInput" required>
+            <small>Specify the sunset time for the aquarium lighting schedule.</small>
+
+            <label for="feedingCount">Number of Feedings:</label>
+            <select id="feedingCount" required>
+                <option value="1">1 Feeding</option>
+                <option value="2">2 Feedings</option>
+            </select>
+            <small>Select how many times the aquarium should be fed daily.</small>
+
+            <div id="feedingTimesContainer">
+                <label for="feedingTimesInput">Feeding Times:</label>
+                <!-- Options will be dynamically added based on selected number of feedings -->
+            </div>
+
+            <button type="submit">Update Data</button>
+        </form>
+    </div>
 
     <!-- Import skryptów z atrybutem 'defer' -->
     <script type="module" src="./config.js" defer></script>
