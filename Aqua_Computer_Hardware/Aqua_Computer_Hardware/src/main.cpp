@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include <WiFi.h>
 #include <Firebase_ESP_Client.h>
+#include "ph/PH_Sensor.h"
 
 // Import secret credentials
 #include "secrets.h"
@@ -10,19 +11,26 @@
 // Provide the RTDB payload printing info and other helper functions.
 #include "addons/RTDBHelper.h"
 
-#include "tds.h"
+#include "tds/tds.h"
 
 // Define Firebase Data object
 FirebaseData fbdo;
 FirebaseAuth auth;
 FirebaseConfig config;
 
+// Define your pH sensor pin and calibration value
+#define PH_PIN 32
+float calibration_value = 21.34 - 0.7; // Adjust based on your calibration
+
+PH_Sensor phSensor(PH_PIN, calibration_value); // Create a PH_Sensor object
+
 unsigned long sendDataPrevMillis = 0;
 bool signupOK = false;
 
 void setup() {
     Serial.begin(115200);
-    
+
+    phSensor.begin();
     // Connect to Wi-Fi
     WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
     Serial.print("Connecting to Wi-Fi");
@@ -68,6 +76,10 @@ void setup() {
 void loop() {
     // Read TDS value
     readTDS(); // Ensure that this function is defined in "tds.h"
+    float pHValue = phSensor.readPH(); // Read pH value
+    Serial.print("pH Value: ");
+    Serial.println(pHValue); // Print pH value to Serial Monitor
+    delay(1000); // Wait for 1 second before the next reading
     
     // Debugging: Check the TDS value
     if (tdsValue < 0) { // Assume readTDS() sets tdsValue; adjust as needed
@@ -76,7 +88,7 @@ void loop() {
         Serial.print("Current TDS Value: ");
         Serial.println(tdsValue);
     }
-
+/* 
     // Upload data if Firebase is ready and we have successfully signed up
     if (Firebase.ready() && signupOK && (millis() - sendDataPrevMillis > 15000 || sendDataPrevMillis == 0)) {
         sendDataPrevMillis = millis();
@@ -95,5 +107,5 @@ void loop() {
             Serial.println("Error Code: " + String(fbdo.httpCode()));
             Serial.println("Firebase Error: " + fbdo.errorReason());
         }
-    }
+    } */
 }
