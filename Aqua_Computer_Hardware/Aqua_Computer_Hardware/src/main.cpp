@@ -2,46 +2,49 @@
 #include <WiFi.h>
 #include <Firebase_ESP_Client.h>
 #include "ph/PH_Sensor.h"
-
-// Import secret credentials
-#include "secrets.h"
-
-// Provide the token generation process info.
-#include "addons/TokenHelper.h"
-// Provide the RTDB payload printing info and other helper functions.
-#include "addons/RTDBHelper.h"
-
+#include <OneWire.h>
+#include <DallasTemperature.h>
+#include "secrets.h" // Import secret credentials
+#include "addons/TokenHelper.h" // Token generation process info
+#include "addons/RTDBHelper.h" // RTDB payload printing info and other helpers
 #include "tds/tds.h"
 
-// Define Firebase Data object
+// Firebase configuration
 FirebaseData fbdo;
 FirebaseAuth auth;
 FirebaseConfig config;
 
-// Define your pH sensor pin and calibration value
+// pH sensor configuration
 #define PH_PIN 32
 float calibration_value = 21.34 - 0.7; // Adjust based on your calibration
+PH_Sensor phSensor(PH_PIN, calibration_value);
 
-PH_Sensor phSensor(PH_PIN, calibration_value); // Create a PH_Sensor object
+// DS18B20 temperature sensor configuration
+const int oneWireBus = 34;
+OneWire oneWire(oneWireBus);
+DallasTemperature sensors(&oneWire);
 
+// Timing variables
 unsigned long sendDataPrevMillis = 0;
 bool signupOK = false;
 
 void setup() {
     Serial.begin(115200);
-
+    sensors.begin();
     phSensor.begin();
+
     // Connect to Wi-Fi
     WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
     Serial.print("Connecting to Wi-Fi");
-    
     unsigned long startAttemptTime = millis();
     
+    // Attempt to connect to Wi-Fi
     while (WiFi.status() != WL_CONNECTED && millis() - startAttemptTime < 30000) {
         Serial.print(".");
         delay(300);
     }
 
+    // Check if connection was successful
     if (WiFi.status() != WL_CONNECTED) {
         Serial.println("\nFailed to connect to Wi-Fi");
         return; // Exit setup if Wi-Fi connection fails
@@ -52,13 +55,12 @@ void setup() {
     Serial.println(WiFi.localIP());
     Serial.println();
 
-    // Assign the API key (required)
+    // Firebase configuration
     config.api_key = API_KEY;
-
-    // Assign the RTDB URL (required)
     config.database_url = DATABASE_URL;
+    config.token_status_callback = tokenStatusCallback;
 
-    // Sign up
+    // Firebase sign-up
     if (Firebase.signUp(&config, &auth, "", "")) {
         Serial.println("Firebase sign up OK");
         signupOK = true;
@@ -66,9 +68,7 @@ void setup() {
         Serial.printf("Sign up failed: %s\n", config.signer.signupError.message.c_str());
     }
 
-    // Assign the callback function for the long-running token generation task
-    config.token_status_callback = tokenStatusCallback; // see addons/TokenHelper.h
-    
+    // Initialize Firebase
     Firebase.begin(&config, &auth);
     Firebase.reconnectWiFi(true);
 }
@@ -76,11 +76,13 @@ void setup() {
 void loop() {
     // Read TDS value
     readTDS(); // Ensure that this function is defined in "tds.h"
-    float pHValue = phSensor.readPH(); // Read pH value
-    Serial.print("pH Value: ");
-    Serial.println(pHValue); // Print pH value to Serial Monitor
-    delay(1000); // Wait for 1 second before the next reading
     
+    // Read and print pH value
+    float pHValue = phSensor.readPH();
+    Serial.print("pH Value: ");
+    Serial.println(pHValue);
+    delay(1000); // Wait for 1 second
+
     // Debugging: Check the TDS value
     if (tdsValue < 0) { // Assume readTDS() sets tdsValue; adjust as needed
         Serial.println("Failed to read TDS value.");
@@ -88,14 +90,24 @@ void loop() {
         Serial.print("Current TDS Value: ");
         Serial.println(tdsValue);
     }
-/* 
-    // Upload data if Firebase is ready and we have successfully signed up
+
+    // Read and print temperature
+    sensors.requestTemperatures();
+    float temperatureC = sensors.getTempCByIndex(0);
+    float temperatureF = sensors.getTempFByIndex(0);
+    Serial.print(temperatureC);
+    Serial.println("ºC");
+    Serial.print(temperatureF);
+    Serial.println("ºF");
+    delay(5000);
+
+    /*
+    // Upload data to Firebase if conditions are met
     if (Firebase.ready() && signupOK && (millis() - sendDataPrevMillis > 15000 || sendDataPrevMillis == 0)) {
         sendDataPrevMillis = millis();
-
-        // Write temperature (26.0 degrees) to the database path aquariumData
         float temperature = 26.0;
 
+        // Write temperature to database
         if (Firebase.RTDB.setFloat(&fbdo, "aquariumData/temperature", temperature)) {
             Serial.println("Temperature data uploaded successfully.");
             Serial.println("PATH: " + fbdo.dataPath());
@@ -103,9 +115,9 @@ void loop() {
         } else {
             Serial.println("FAILED to upload temperature.");
             Serial.println("REASON: " + fbdo.errorReason());
-            // Additional diagnostic info
             Serial.println("Error Code: " + String(fbdo.httpCode()));
             Serial.println("Firebase Error: " + fbdo.errorReason());
         }
-    } */
+    }
+    */
 }
