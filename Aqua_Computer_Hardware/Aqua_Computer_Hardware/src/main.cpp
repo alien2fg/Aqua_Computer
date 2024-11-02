@@ -1,123 +1,143 @@
 #include <Arduino.h>
 #include <WiFi.h>
-#include <Firebase_ESP_Client.h>
-#include "ph/PH_Sensor.h"
+#include <FirebaseClient.h>
+#include <WiFiClientSecure.h>
+#include "secrets.h"        // Include the secrets file with WiFi and Firebase credentials
+#include "ph/PH_Sensor.h"   // pH sensor header
 #include <OneWire.h>
 #include <DallasTemperature.h>
-#include "secrets.h" // Import secret credentials
-#include "addons/TokenHelper.h" // Token generation process info
-#include "addons/RTDBHelper.h" // RTDB payload printing info and other helpers
-#include "tds/tds.h"
+#include "tds/tds.h"        // TDS sensor header
+#include <time.h>           // For time handling
 
-// Firebase configuration
-FirebaseData fbdo;
-FirebaseAuth auth;
-FirebaseConfig config;
+// Firebase and network configuration
+WiFiClientSecure ssl;
+DefaultNetwork network;
+AsyncClientClass client(ssl, getNetwork(network));
 
-// pH sensor configuration
+FirebaseApp app;
+RealtimeDatabase Database;
+AsyncResult result;
+LegacyToken dbSecret(DATABASE_SECRET);
+
+// Initialize sensor settings
 #define PH_PIN 32
-float calibration_value = 21.34 - 0.7; // Adjust based on your calibration
+float calibration_value = 21.34 - 0.7;
 PH_Sensor phSensor(PH_PIN, calibration_value);
-
-// DS18B20 temperature sensor configuration
 const int oneWireBus = 34;
 OneWire oneWire(oneWireBus);
 DallasTemperature sensors(&oneWire);
 
-// Timing variables
 unsigned long sendDataPrevMillis = 0;
-bool signupOK = false;
+
+void printError(int code, const String &msg) {
+    Serial.printf("Error, msg: %s, code: %d\n", msg.c_str(), code);
+}
 
 void setup() {
     Serial.begin(115200);
     sensors.begin();
     phSensor.begin();
 
-    // Connect to Wi-Fi
+    // Connect to WiFi
     WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
     Serial.print("Connecting to Wi-Fi");
-    unsigned long startAttemptTime = millis();
-    
-    // Attempt to connect to Wi-Fi
-    while (WiFi.status() != WL_CONNECTED && millis() - startAttemptTime < 30000) {
+    while (WiFi.status() != WL_CONNECTED) {
         Serial.print(".");
         delay(300);
     }
-
-    // Check if connection was successful
-    if (WiFi.status() != WL_CONNECTED) {
-        Serial.println("\nFailed to connect to Wi-Fi");
-        return; // Exit setup if Wi-Fi connection fails
-    }
-    
     Serial.println();
     Serial.print("Connected with IP: ");
     Serial.println(WiFi.localIP());
-    Serial.println();
 
-    // Firebase configuration
-    config.api_key = API_KEY;
-    config.database_url = DATABASE_URL;
-    config.token_status_callback = tokenStatusCallback;
+    // Firebase Initialization
+    ssl.setInsecure();
+    Firebase.printf("Firebase Client v%s\n", FIREBASE_CLIENT_VERSION);
+    initializeApp(client, app, getAuth(dbSecret));
+    app.getApp<RealtimeDatabase>(Database);
+    Database.url(DATABASE_URL);
+    client.setAsyncResult(result);
 
-    // Firebase sign-up
-    if (Firebase.signUp(&config, &auth, "", "")) {
-        Serial.println("Firebase sign up OK");
-        signupOK = true;
-    } else {
-        Serial.printf("Sign up failed: %s\n", config.signer.signupError.message.c_str());
-    }
-
-    // Initialize Firebase
-    Firebase.begin(&config, &auth);
-    Firebase.reconnectWiFi(true);
+    // Set the initial values for sunrise, sunset, and feeding times
+    Serial.print("Setting initial values for sunrise, sunset, and feeding times... ");
+    Database.set<String>(client, "/aquariumData/sunrise", "06:15 AM");
+    Database.set<String>(client, "/aquariumData/sunset", "08:10 PM");
+    Database.set<String>(client, "/aquariumData/feedingTimes", "07:00 AM");
+    
+    Serial.println("Initial values set.");
+    
+    // Initialize NTP for timekeeping (UTC+1 for Poland, with automatic DST handling)
+    configTime(3600, 0, "pool.ntp.org", "time.nist.gov"); // 3600 seconds offset for UTC+1
+    Serial.println("Time configured to Poland timezone (UTC+1).");
 }
 
 void loop() {
-    // Read TDS value
-    readTDS(); // Ensure that this function is defined in "tds.h"
-    
-    // Read and print pH value
+    // Update sensor readings
     float pHValue = phSensor.readPH();
-    Serial.print("pH Value: ");
-    Serial.println(pHValue);
-    delay(1000); // Wait for 1 second
-
-    // Debugging: Check the TDS value
-    if (tdsValue < 0) { // Assume readTDS() sets tdsValue; adjust as needed
-        Serial.println("Failed to read TDS value.");
-    } else {
-        Serial.print("Current TDS Value: ");
-        Serial.println(tdsValue);
-    }
-
-    // Read and print temperature
     sensors.requestTemperatures();
     float temperatureC = sensors.getTempCByIndex(0);
-    float temperatureF = sensors.getTempFByIndex(0);
-    Serial.print(temperatureC);
-    Serial.println("ºC");
-    Serial.print(temperatureF);
-    Serial.println("ºF");
-    delay(5000);
+    readTDS();  // Ensure this function is defined in "tds.h"
 
-    /*
-    // Upload data to Firebase if conditions are met
-    if (Firebase.ready() && signupOK && (millis() - sendDataPrevMillis > 15000 || sendDataPrevMillis == 0)) {
+    // Check Wi-Fi connection before Firebase operations
+    if (WiFi.status() == WL_CONNECTED && (millis() - sendDataPrevMillis > 15000 || sendDataPrevMillis == 0)) {
         sendDataPrevMillis = millis();
-        float temperature = 26.0;
 
-        // Write temperature to database
-        if (Firebase.RTDB.setFloat(&fbdo, "aquariumData/temperature", temperature)) {
-            Serial.println("Temperature data uploaded successfully.");
-            Serial.println("PATH: " + fbdo.dataPath());
-            Serial.println("TYPE: " + fbdo.dataType());
+        // Upload sensor data to Firebase
+        Serial.print("Setting aquarium data... ");
+        bool status = Database.set<float>(client, "/aquariumData/ph", pHValue) &&
+                      Database.set<float>(client, "/aquariumData/temperature", temperatureC) &&
+                      Database.set<float>(client, "/aquariumData/tds", tdsValue);
+                      
+        if (status) {
+            Serial.println("Data uploaded successfully.");
         } else {
-            Serial.println("FAILED to upload temperature.");
-            Serial.println("REASON: " + fbdo.errorReason());
-            Serial.println("Error Code: " + String(fbdo.httpCode()));
-            Serial.println("Firebase Error: " + fbdo.errorReason());
+            printError(client.lastError().code(), client.lastError().message());
         }
     }
-    */
+
+    // Retrieve and display data from Firebase
+    Serial.print("Retrieving aquarium data... ");
+    String sunriseTime = Database.get<String>(client, "/aquariumData/sunrise");
+    String sunsetTime = Database.get<String>(client, "/aquariumData/sunset");
+    String feedingTimes = Database.get<String>(client, "/aquariumData/feedingTimes");
+
+    if (client.lastError().code() == 0) {
+        Serial.println("Data retrieved successfully.");
+        Serial.print("Sunrise: ");
+        Serial.println(sunriseTime);
+        Serial.print("Sunset: ");
+        Serial.println(sunsetTime);
+        Serial.print("Feeding Time: ");
+        Serial.println(feedingTimes);
+        
+        // Check current time against sunrise and sunset
+        struct tm timeinfo;
+        if (!getLocalTime(&timeinfo, 1000)) {
+            Serial.println("Failed to obtain time");
+            return;
+        }
+
+        // Convert current time to HH:MM format
+        String currentTime = String(timeinfo.tm_hour) + ":" + String(timeinfo.tm_min);
+        Serial.print("Current Time: ");
+        Serial.println(currentTime);
+
+        // Compare times and trigger actions
+        if (currentTime == sunriseTime) {
+            Serial.println("Triggering sunrise action!");
+            // Add your sunrise action here
+        }
+        if (currentTime == sunsetTime) {
+            Serial.println("Triggering sunset action!");
+            // Add your sunset action here
+        }
+        if (currentTime == feedingTimes) {
+            Serial.println("Triggering feeding action!");
+            // Add your feeding action here
+        }
+
+    } else {
+        printError(client.lastError().code(), client.lastError().message());
+    }
+
+    delay(5000);  // Delay to avoid frequent Firebase requests
 }
