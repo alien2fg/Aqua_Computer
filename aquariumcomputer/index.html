@@ -90,9 +90,6 @@
     <div class="form-section">
         <h2>Update Data</h2>
         <form id="dataForm">
-            <label for="temperatureInput">Temperature (°C):</label>
-            <input type="number" id="temperatureInput" step="0.1" min="0" required>
-            <small>Set the current temperature of the aquarium.</small>
 
             <label for="sunriseInput">Sunrise Time:</label>
             <input type="time" id="sunriseInput" required>
@@ -116,6 +113,10 @@
 
             <button type="submit">Update Data</button>
         </form>
+
+        <!-- Button to trigger feed now action -->
+        <button id="feedNowBtn">Feed Now</button>
+
     </div>
 
     <!-- Import skryptów z atrybutem 'defer' -->

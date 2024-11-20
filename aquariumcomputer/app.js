@@ -1,6 +1,4 @@
-// app.js
-
-import { ref, set, onValue } from 'https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js';
+import { ref, set, onValue, update } from 'https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js';
 import { database } from './firebase-config.js';
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -58,27 +56,24 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Event listener for the form to simulate data update
     const dataForm = document.getElementById('dataForm');
-    
     if (dataForm) {
         dataForm.addEventListener('submit', (event) => {
             event.preventDefault();
 
-            const temperatureInput = document.getElementById('temperatureInput');
             const sunriseInput = document.getElementById('sunriseInput');
             const sunsetInput = document.getElementById('sunsetInput');
             const feedingCountElement = document.getElementById('feedingCount');
 
-            if (!temperatureInput || !sunriseInput || !sunsetInput || !feedingCountElement) {
+            if (!sunriseInput || !sunsetInput || !feedingCountElement) {
                 console.error('One or more form elements are missing.');
                 return;
             }
 
-            const temperature = temperatureInput.value;
             const sunrise = sunriseInput.value;
             const sunset = sunsetInput.value;
             const feedingCount = parseInt(feedingCountElement.value, 10);
             const feedingTimes = [];
-            
+
             for (let i = 0; i < feedingCount; i++) {
                 const feedingTimeInput = document.getElementById(`feedingTime${i + 1}`);
                 if (feedingTimeInput) {
@@ -88,12 +83,12 @@ document.addEventListener('DOMContentLoaded', function() {
             }
 
             const data = {
-                temperature: parseFloat(temperature).toFixed(1),
+                temperature: document.getElementById('temperature').textContent,  // Temperature will be static now
                 ph: document.getElementById('ph').textContent, // pH is read-only
                 sunrise: sunrise,
                 sunset: sunset,
                 feedingTimes: feedingTimes,
-                tds: Math.floor(Math.random() * 1000 + 200) // This can be updated as needed
+                tds: document.getElementById('tds').textContent, // TDS will also be static now
             };
 
             // Update Firebase with new data
@@ -109,4 +104,19 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Initialize feeding times options based on default value
     updateFeedingTimesOptions(1); // Default to 1 feeding time
+
+    // Feed Now button functionality
+    const feedNowBtn = document.getElementById('feedNowBtn');
+    if (feedNowBtn) {
+        feedNowBtn.addEventListener('click', () => {
+            // Set feedNow to 1 inside aquariumData object
+            update(dataRef, { feedNow: 1 }).then(() => {
+                console.log('Feed Now triggered');
+            }).catch((error) => {
+                console.error('Error triggering Feed Now:', error);
+            });
+        });
+    } else {
+        console.error('Feed Now button not found.');
+    }
 });
