@@ -1,9 +1,9 @@
 import { ref, set, onValue, update } from 'https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js';
 import { database } from './firebase-config.js';
 
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     const dataRef = ref(database, '/aquariumData');
-    
+
     // Function to update UI with data
     function updateUI(data) {
         document.getElementById('temperature').textContent = data.temperature || 'N/A';
@@ -12,6 +12,7 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('sunrise').textContent = data.sunrise || 'N/A';
         document.getElementById('sunset').textContent = data.sunset || 'N/A';
         document.getElementById('feedingTimes').textContent = data.feedingTimes ? data.feedingTimes.join(', ') : 'N/A';
+        document.getElementById('feedAmount').textContent = data.feedAmount ? data.feedAmount + ' grams' : 'N/A';
     }
 
     // Fetch and display data
@@ -63,8 +64,9 @@ document.addEventListener('DOMContentLoaded', function() {
             const sunriseInput = document.getElementById('sunriseInput');
             const sunsetInput = document.getElementById('sunsetInput');
             const feedingCountElement = document.getElementById('feedingCount');
+            const feedAmountInput = document.getElementById('feedAmountInput');
 
-            if (!sunriseInput || !sunsetInput || !feedingCountElement) {
+            if (!sunriseInput || !sunsetInput || !feedingCountElement || !feedAmountInput) {
                 console.error('One or more form elements are missing.');
                 return;
             }
@@ -73,6 +75,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const sunset = sunsetInput.value;
             const feedingCount = parseInt(feedingCountElement.value, 10);
             const feedingTimes = [];
+            const feedAmount = parseFloat(feedAmountInput.value);
 
             for (let i = 0; i < feedingCount; i++) {
                 const feedingTimeInput = document.getElementById(`feedingTime${i + 1}`);
@@ -89,6 +92,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 sunset: sunset,
                 feedingTimes: feedingTimes,
                 tds: document.getElementById('tds').textContent, // TDS will also be static now
+                feedAmount: feedAmount,
             };
 
             // Update Firebase with new data

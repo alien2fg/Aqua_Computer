@@ -3,7 +3,8 @@
 
 #include <Adafruit_NeoPixel.h>
 
-class SunriseSunset {
+class SunriseSunset
+{
 public:
     SunriseSunset(uint16_t pin, uint16_t ledCount);
     void sunrise();
