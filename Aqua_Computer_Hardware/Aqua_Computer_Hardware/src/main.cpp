@@ -52,7 +52,7 @@ unsigned long lastFirebaseFetchMillis = 0;
 unsigned long lastFeedingMillis = 0;         // Czas ostatniego karmienia
 const unsigned long feedingInterval = 60000; // Czas, po którym karmnik może się włączyć ponownie (1 minuta)
 unsigned long feederStartTime = 0;           // Czas rozpoczęcia karmienia
-const unsigned long feederDuration = 0;      // Czas działania karmnika w milisekundach (5 sekund)
+unsigned long feederDuration = 0;            // Czas działania karmnika w milisekundach (5 sekund)
 const long feederOutputRate = 5;             // Wydajność karmnika w gramach na sekundę
 
 unsigned long lightStartTime = 0; // Czas rozpoczęcia włączania światła
@@ -169,7 +169,8 @@ void fetchFirebaseData()
         String newSunset = Database.get<String>(client, "/aquariumData/sunset");
         String newFeeding = Database.get<String>(client, "/aquariumData/feedingTimes");
         int newFeedNow = Database.get<int>(client, "/aquariumData/feedNow");
-        long newFeedAmountGrams = Database.get<long>(client, "/aquariumData/feedAmount");
+        String newFeedAmountGramsStr = Database.get<String>(client, "/aquariumData/feedAmount");
+        long newFeedAmountGrams = newFeedAmountGramsStr.toInt();
 
         if (client.lastError().code() == 0)
         {
@@ -191,9 +192,6 @@ void fetchFirebaseData()
 
             Serial.println("Data retrieved successfully.");
             Serial.printf("Feed amount: %ld grams, Feeder duration: %ld ms\n", newFeedAmountGrams, feederDuration);
-
-            Serial.println("Data retrieved successfully.");
-            Serial.printf("Feed amount: %.2f grams, Calculated duration: %lu ms\n", feedAmountGrams, calculatedFeederDuration);
 
             Serial.println("Data retrieved successfully.");
             Serial.print("Sunrise: ");
