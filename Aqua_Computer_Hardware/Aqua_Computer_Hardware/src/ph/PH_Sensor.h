@@ -5,13 +5,12 @@
 
 class PH_Sensor {
 public:
-    PH_Sensor(int pin, float calibration);
+    PH_Sensor(int pin);
     void begin();
     float readPH();
 
 private:
     int pH_PIN;
-    float calibration_value;
 };
 
 #endif

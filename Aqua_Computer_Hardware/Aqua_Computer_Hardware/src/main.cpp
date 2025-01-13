@@ -15,7 +15,7 @@
 #define LED_PIN 27
 #define LED_COUNT 40
 #define PH_PIN 32
-#define ONE_WIRE_BUS_PIN 34
+#define ONE_WIRE_BUS_PIN 14
 #define FEEDER_PIN 25    // GPIO25 do sterowania karmnikiem
 #define WHITE_LED_PIN 26 // GPIO26 do sterowania białą taśmą LED
 
@@ -40,7 +40,7 @@ Adafruit_NeoPixel strip(LED_COUNT, LED_PIN, NEO_GRB + NEO_KHZ800);
 
 // Initialize sensor settings
 float calibration_value = 21.34 - 0.7;
-PH_Sensor phSensor(PH_PIN, calibration_value);
+PH_Sensor phSensor(PH_PIN);
 OneWire oneWire(ONE_WIRE_BUS_PIN);
 DallasTemperature sensors(&oneWire);
 
@@ -53,7 +53,7 @@ unsigned long lastFeedingMillis = 0;         // Czas ostatniego karmienia
 const unsigned long feedingInterval = 60000; // Czas, po którym karmnik może się włączyć ponownie (1 minuta)
 unsigned long feederStartTime = 0;           // Czas rozpoczęcia karmienia
 unsigned long feederDuration = 0;            // Czas działania karmnika w milisekundach (5 sekund)
-const long feederOutputRate = 5;             // Wydajność karmnika w gramach na sekundę
+const long feederOutputRate = 1;             // Wydajność karmnika w gramach na sekundę
 
 unsigned long lightStartTime = 0; // Czas rozpoczęcia włączania światła
 unsigned long lightDuration = 0;  // Czas trwania światła, ustawiony jako różnica między godziną wschodu a zachodu

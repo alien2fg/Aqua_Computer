@@ -3,134 +3,32 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Aquarium Monitoring</title>
-    <style>
-      /* Twój styl pozostaje bez zmian */
-      body {
-        font-family: Arial, sans-serif;
-        margin: 20px;
-        background-size: cover;
-        color: #000;
-      }
-      .data-section {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 20px;
-      }
-      .data-box {
-        background-color: rgba(255, 255, 255, 0.8);
-        color: #000;
-        padding: 20px;
-        border-radius: 10px;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-        min-width: 150px;
-        flex: 1;
-      }
-      h1 {
-        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
-      }
-      button {
-        background: #007bff;
-        border: none;
-        color: #fff;
-        padding: 10px 20px;
-        font-size: 16px;
-        cursor: pointer;
-        border-radius: 5px;
-        margin-top: 20px;
-      }
-      button:hover {
-        background: #0056b3;
-      }
-      .data-box h2 {
-        margin-bottom: 10px;
-      }
-      .form-section {
-        margin-top: 30px;
-      }
-      .form-section input,
-      .form-section select {
-        padding: 10px;
-        margin: 5px 0;
-        border: 1px solid #ddd;
-        border-radius: 5px;
-        width: calc(100% - 22px);
-        color: #000;
-      }
-      .form-section label {
-        display: block;
-        margin-top: 10px;
-        color: #000;
-      }
-    </style>
+    <title>Log In</title>
   </head>
   <body>
-    <h1>Aquarium Monitoring</h1>
-    <div class="data-section">
-      <div class="data-box">
-        <h2>Temperature: <span id="temperature">Loading...</span> °C</h2>
-      </div>
-      <div class="data-box">
-        <h2>pH: <span id="ph">Loading...</span></h2>
-      </div>
-      <div class="data-box">
-        <h2>TDS: <span id="tds">Loading...</span> ppm</h2>
-      </div>
-      <div class="data-box">
-        <h2>Sunrise: <span id="sunrise">Loading...</span></h2>
-      </div>
-      <div class="data-box">
-        <h2>Sunset: <span id="sunset">Loading...</span></h2>
-      </div>
-      <div class="data-box">
-        <h2>Feeding Times: <span id="feedingTimes">Loading...</span></h2>
-      </div>
-      <div class="data-box">
-        <h2>Feed Amount: <span id="feedAmount">Loading...</span> grams</h2>
-      </div>
-    </div>
+    <h1>Log In</h1>
+    <form id="loginForm">
+      <label for="email">Email:</label>
+      <input type="email" id="email" required />
+      <label for="password">Password:</label>
+      <input type="password" id="password" required />
+      <button type="submit">Log In</button>
+    </form>
+    <script type="module">
+      import { getAuth, signInWithEmailAndPassword } from 'https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js';
+      import './firebase-config.js';
 
-    <div class="form-section">
-      <h2>Update Data</h2>
-      <form id="dataForm">
-        <label for="sunriseInput">Sunrise Time:</label>
-        <input type="time" id="sunriseInput" required />
-        <small
-          >Specify the sunrise time for the aquarium lighting schedule.</small
-        >
+      const auth = getAuth();
 
-        <label for="sunsetInput">Sunset Time:</label>
-        <input type="time" id="sunsetInput" required />
-        <small
-          >Specify the sunset time for the aquarium lighting schedule.</small
-        >
+      document.getElementById('loginForm').addEventListener('submit', (event) => {
+        event.preventDefault();
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
 
-        <label for="feedAmountInput">Feed Amount (in grams):</label>
-        <input type="number" id="feedAmountInput" required min="0" step="0.1" />
-        <small>Specify the amount of food in grams for each feeding.</small>
-
-        <label for="feedingCount">Number of Feedings:</label>
-        <select id="feedingCount" required>
-          <option value="1">1 Feeding</option>
-          <option value="2">2 Feedings</option>
-        </select>
-        <small>Select how many times the aquarium should be fed daily.</small>
-
-        <div id="feedingTimesContainer">
-          <label for="feedingTimesInput">Feeding Times:</label>
-          <!-- Options will be dynamically added based on selected number of feedings -->
-        </div>
-
-        <button type="submit">Update Data</button>
-      </form>
-
-      <!-- Button to trigger feed now action -->
-      <button id="feedNowBtn">Feed Now</button>
-    </div>
-
-    <!-- Import skryptów z atrybutem 'defer' -->
-    <script type="module" src="./config.js" defer></script>
-    <script type="module" src="./firebase-config.js" defer></script>
-    <script type="module" src="./app.js" defer></script>
+        signInWithEmailAndPassword(auth, email, password)
+          .then(() => window.location.href = 'dashboard.html')
+          .catch(console.error);
+      });
+    </script>
   </body>
 </html>
